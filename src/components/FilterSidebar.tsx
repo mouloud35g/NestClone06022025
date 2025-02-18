@@ -18,10 +18,18 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({
-  onPriceChange = () => {},
-  onCategoryChange = () => {},
-  onColorChange = () => {},
-  onAvailabilityChange = () => {},
+  onPriceChange = (range) => {
+    filterProducts({ minPrice: range[0], maxPrice: range[1] });
+  },
+  onCategoryChange = (category) => {
+    filterProducts({ category });
+  },
+  onColorChange = (color) => {
+    filterProducts({ color });
+  },
+  onAvailabilityChange = (inStock) => {
+    filterProducts({ inStock });
+  },
 }: FilterSidebarProps) => {
   return (
     <aside className="w-[280px] h-full bg-white p-6 border-r">

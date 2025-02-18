@@ -1,80 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import FilterSidebar from "./FilterSidebar";
 import ProductGrid from "./ProductGrid";
 import QuickViewModal from "./QuickViewModal";
-import { CartSheet } from "./CartSheet.jsx";
+import { CartSheet } from "./CartSheet";
+import { CheckoutDialog } from "./CheckoutDialog";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useProducts, Product } from "@/hooks/useProducts";
+import { useCategories, Category } from "@/hooks/useCategories";
 
-interface HomeProps {
-  initialProducts?: Array<{
-    id: string;
-    name: string;
-    price: number;
-    rating: number;
-    image: string;
-    isFavorite: boolean;
-    description?: string;
-    images?: string[];
-  }>;
-}
-
-const Home = ({
-  initialProducts = [
-    {
-      id: "1",
-      name: "Modern Lounge Chair",
-      price: 299.99,
-      rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=500&q=80",
-      isFavorite: false,
-      description:
-        "A comfortable and stylish lounge chair perfect for any modern living space.",
-      images: [
-        "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=500&q=80",
-        "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500&q=80",
-      ],
-    },
-    {
-      id: "2",
-      name: "Minimalist Desk Lamp",
-      price: 89.99,
-      rating: 4.8,
-      image:
-        "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-      isFavorite: true,
-      description:
-        "Modern desk lamp with adjustable arm and energy-efficient LED bulb.",
-      images: [
-        "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80",
-        "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
-      ],
-    },
-    {
-      id: "3",
-      name: "Wooden Coffee Table",
-      price: 199.99,
-      rating: 4.2,
-      image:
-        "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=500&q=80",
-      isFavorite: false,
-      description:
-        "Solid wood coffee table with modern design and sturdy construction.",
-      images: [
-        "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=500&q=80",
-        "https://images.unsplash.com/photo-1565791380713-1756b9a05343?w=500&q=80",
-      ],
-    },
-  ],
-}: HomeProps) => {
-  const [products, setProducts] = useState(initialProducts);
-  const [selectedProduct, setSelectedProduct] = useState<
-    (typeof initialProducts)[0] | null
-  >(null);
+const Home = () => {
+  const { categories } = useCategories();
+  const { products, loading, filterProducts } = useProducts();
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { items: cartItems, addItem: addToCart } = useCart();
   const {
     items: wishlistItems,
@@ -84,11 +27,7 @@ const Home = ({
   } = useWishlist();
 
   const handleSearch = (query: string) => {
-    // Filter products based on search query
-    const filtered = initialProducts.filter((product) =>
-      product.name.toLowerCase().includes(query.toLowerCase()),
-    );
-    setProducts(filtered);
+    filterProducts({ query });
   };
 
   const handleFavoriteClick = (id: string) => {
@@ -137,16 +76,23 @@ const Home = ({
     <div className="min-h-screen bg-white">
       <Navbar
         onSearch={handleSearch}
+        onCategorySelect={(category) => {
+          setSelectedCategory(category);
+          filterProducts({ category });
+        }}
         favoritesCount={wishlistItems.length}
         cartItemCount={cartItems.length}
+        categories={categories}
       />
 
       <div className="pt-[72px] flex">
         <FilterSidebar
-          onPriceChange={(range) => console.log("Price range:", range)}
-          onCategoryChange={(category) => console.log("Category:", category)}
-          onColorChange={(color) => console.log("Color:", color)}
-          onAvailabilityChange={(inStock) => console.log("In stock:", inStock)}
+          onPriceChange={(range) =>
+            filterProducts({ minPrice: range[0], maxPrice: range[1] })
+          }
+          onCategoryChange={(category) => filterProducts({ category })}
+          onColorChange={(color) => filterProducts({ color })}
+          onAvailabilityChange={(inStock) => filterProducts({ inStock })}
         />
 
         <ProductGrid
@@ -169,7 +115,14 @@ const Home = ({
         />
       )}
 
-      <CartSheet open={isCartOpen} onOpenChange={setIsCartOpen} />
+      <CartSheet
+        open={isCartOpen}
+        onOpenChange={(open) => {
+          setIsCartOpen(open);
+          if (!open) setIsCheckoutOpen(true);
+        }}
+      />
+      <CheckoutDialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen} />
     </div>
   );
 };

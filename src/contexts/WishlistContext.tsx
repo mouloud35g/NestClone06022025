@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
+import { supabase } from "@/lib/supabase";
 
 type WishlistItem = {
   id: string;
@@ -19,8 +21,39 @@ const WishlistContext = createContext<WishlistContextType | undefined>(
   undefined,
 );
 
-export function WishlistProvider({ children }: { children: React.ReactNode }) {
+const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
   const [items, setItems] = useState<WishlistItem[]>([]);
+
+  // Load wishlist from Supabase when user logs in
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("wishlists")
+        .select("items")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.items) setItems(data.items);
+        });
+    } else {
+      setItems([]); // Clear wishlist when user logs out
+    }
+  }, [user]);
+
+  // Save wishlist to Supabase when it changes
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("wishlists")
+        .upsert({
+          user_id: user.id,
+          items,
+          updated_at: new Date().toISOString(),
+        })
+        .then();
+    }
+  }, [items, user]);
 
   const addItem = (product: WishlistItem) => {
     setItems((currentItems) => {
@@ -56,12 +89,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       {children}
     </WishlistContext.Provider>
   );
-}
+};
 
-export function useWishlist() {
+const useWishlist = () => {
   const context = useContext(WishlistContext);
   if (context === undefined) {
     throw new Error("useWishlist must be used within a WishlistProvider");
   }
   return context;
-}
+};
+
+export { WishlistProvider, useWishlist };

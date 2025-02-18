@@ -91,7 +91,9 @@ export function CartSheet({
                 <span className="font-medium">Total</span>
                 <span className="font-medium">${total.toFixed(2)}</span>
               </div>
-              <Button className="w-full">Checkout</Button>
+              <Button className="w-full" onClick={() => onOpenChange(false)}>
+                Proceed to Checkout
+              </Button>
             </div>
           )}
         </div>

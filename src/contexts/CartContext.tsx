@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
+import { supabase } from "@/lib/supabase";
 
 type CartItem = {
   id: string;
@@ -20,7 +22,38 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+
+  // Load cart from Supabase when user logs in
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("saved_carts")
+        .select("items")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.items) setItems(data.items);
+        });
+    } else {
+      setItems([]); // Clear cart when user logs out
+    }
+  }, [user]);
+
+  // Save cart to Supabase when it changes
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("saved_carts")
+        .upsert({
+          user_id: user.id,
+          items,
+          updated_at: new Date().toISOString(),
+        })
+        .then();
+    }
+  }, [items, user]);
 
   const addItem = (product: Omit<CartItem, "quantity">) => {
     setItems((currentItems) => {
@@ -41,7 +74,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity < 1) return;
+    if (quantity < 1) {
+      removeItem(id);
+      return;
+    }
     setItems((items) =>
       items.map((item) => (item.id === id ? { ...item, quantity } : item)),
     );

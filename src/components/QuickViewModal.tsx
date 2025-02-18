@@ -1,7 +1,17 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { ReviewForm } from "./ReviewForm";
+import { ReviewList } from "./ReviewList";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 interface QuickViewModalProps {
@@ -14,6 +24,7 @@ interface QuickViewModalProps {
     description: string;
     images: string[];
     rating: number;
+    review_count: number;
     isFavorite: boolean;
   };
   onAddToCart?: (id: string) => void;
@@ -34,6 +45,7 @@ const QuickViewModal = ({
       "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=500&q=80",
     ],
     rating: 4.5,
+    review_count: 0,
     isFavorite: false,
   },
   onAddToCart = () => {},
@@ -81,45 +93,82 @@ const QuickViewModal = ({
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-2xl font-bold">
-                  ${product.price.toFixed(2)}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-sm text-gray-600">
-                    {product.rating}
+          <Tabs defaultValue="details" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="reviews">
+                Reviews ({product.review_count})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="space-y-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-2xl font-bold">
+                    ${product.price.toFixed(2)}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-yellow-400">★</span>
+                    <span className="text-sm text-gray-600">
+                      {product.rating}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onFavoriteClick(product.id)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <Heart
+                    className={cn(
+                      "w-6 h-6",
+                      product.isFavorite
+                        ? "fill-red-500 stroke-red-500"
+                        : "stroke-gray-600",
+                    )}
+                  />
+                </button>
+              </div>
+
+              <p className="text-gray-600">{product.description}</p>
+
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => onAddToCart(product.id)}
+              >
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                Add to Cart
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="space-y-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-1">
+                  <Star className="w-6 h-6 fill-yellow-400 stroke-yellow-400" />
+                  <span className="text-lg font-semibold">
+                    {product.rating.toFixed(1)}
                   </span>
                 </div>
+                <span className="text-sm text-muted-foreground">
+                  {product.review_count}{" "}
+                  {product.review_count === 1 ? "review" : "reviews"}
+                </span>
               </div>
-              <button
-                onClick={() => onFavoriteClick(product.id)}
-                className="p-2 rounded-full hover:bg-gray-100"
-              >
-                <Heart
-                  className={cn(
-                    "w-6 h-6",
-                    product.isFavorite
-                      ? "fill-red-500 stroke-red-500"
-                      : "stroke-gray-600",
-                  )}
-                />
-              </button>
-            </div>
 
-            <p className="text-gray-600">{product.description}</p>
+              <ReviewList productId={product.id} />
 
-            <Button
-              size="lg"
-              className="w-full"
-              onClick={() => onAddToCart(product.id)}
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Add to Cart
-            </Button>
-          </div>
+              {useAuth().user ? (
+                <div className="pt-6 border-t">
+                  <h3 className="font-medium mb-4">Write a Review</h3>
+                  <ReviewForm productId={product.id} />
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  Please sign in to write a review
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </DialogContent>
     </Dialog>

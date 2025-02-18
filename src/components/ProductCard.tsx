@@ -9,6 +9,7 @@ interface ProductCardProps {
   name?: string;
   price?: number;
   rating?: number;
+  review_count?: number;
   image?: string;
   isFavorite?: boolean;
   onFavoriteClick?: (id: string) => void;
@@ -20,6 +21,7 @@ const ProductCard = ({
   name = "Modern Lounge Chair",
   price = 299.99,
   rating = 4.5,
+  review_count = 0,
   image = "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=500&q=80",
   isFavorite = false,
   onFavoriteClick = () => {},
@@ -54,7 +56,9 @@ const ProductCard = ({
           </span>
           <div className="flex items-center gap-1">
             <span className="text-yellow-400">★</span>
-            <span className="text-sm text-gray-600">{rating}</span>
+            <span className="text-sm text-gray-600">
+              {rating.toFixed(1)} ({review_count})
+            </span>
           </div>
         </div>
         <Button
