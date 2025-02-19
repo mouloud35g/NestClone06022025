@@ -126,6 +126,11 @@ const Navbar = ({
                     Order History
                   </Link>
                 </DropdownMenuItem>
+                {user.email?.endsWith("@admin.com") && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={signOut}>Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import OrderHistory from "./components/OrderHistory";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import { DashboardLayout } from "./components/admin/DashboardLayout";
 import routes from "tempo-routes";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -17,6 +19,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/orders" element={<OrderHistory />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <DashboardLayout>
+                      <AdminDashboard />
+                    </DashboardLayout>
+                  }
+                />
               </Routes>
               {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
             </>

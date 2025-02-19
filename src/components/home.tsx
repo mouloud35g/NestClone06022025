@@ -12,6 +12,10 @@ import { useCategories, Category } from "@/hooks/useCategories";
 
 const Home = () => {
   const { categories } = useCategories();
+  const formattedCategories = categories.map((category) => ({
+    name: category.name,
+    subcategories: category.subcategories?.map((sub) => sub.name) || [],
+  }));
   const { products, loading, filterProducts } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -82,7 +86,7 @@ const Home = () => {
         }}
         favoritesCount={wishlistItems.length}
         cartItemCount={cartItems.length}
-        categories={categories}
+        categories={formattedCategories}
       />
 
       <div className="pt-[72px] flex">

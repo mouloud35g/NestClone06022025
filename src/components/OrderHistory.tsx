@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { OrderDetails } from "./OrderDetails";
 import {
   Table,
   TableBody,
@@ -51,9 +52,6 @@ export default function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [updateStatusOrder, setUpdateStatusOrder] = useState<Order | null>(
-    null,
-  );
   const { user } = useAuth();
 
   useEffect(() => {
@@ -141,100 +139,12 @@ export default function OrderHistory() {
         </div>
       )}
 
-      <Dialog
+      <OrderDetails
         open={!!selectedOrder}
-        onOpenChange={() => setSelectedOrder(null)}
-      >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
-          </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium mb-2">Shipping Address</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>{selectedOrder.shipping_address.name}</p>
-                    <p>{selectedOrder.shipping_address.address}</p>
-                    <p>
-                      {selectedOrder.shipping_address.city},{" "}
-                      {selectedOrder.shipping_address.country}
-                    </p>
-                    <p>{selectedOrder.shipping_address.postal_code}</p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">Order Summary</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>Order ID: {selectedOrder.id.slice(0, 8)}</p>
-                    <p>
-                      Date:{" "}
-                      {format(
-                        new Date(selectedOrder.created_at),
-                        "MMM d, yyyy",
-                      )}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      Status:{" "}
-                      <OrderStatusBadge status={selectedOrder.status as any} />
-                    </p>
-                    <p>Total: ${selectedOrder.total.toFixed(2)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-medium mb-4">Items</h3>
-                <div className="space-y-4">
-                  {selectedOrder.items?.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center space-x-4 py-4 border-b last:border-0"
-                    >
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{item.product.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          Quantity: {item.quantity}
-                        </p>
-                      </div>
-                      <p className="font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {selectedOrder.status_history &&
-                selectedOrder.status_history.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-4">Status History</h3>
-                    <OrderStatusTimeline
-                      history={selectedOrder.status_history}
-                    />
-                  </div>
-                )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {updateStatusOrder && (
-        <UpdateOrderStatusDialog
-          open={!!updateStatusOrder}
-          onOpenChange={(open) => !open && setUpdateStatusOrder(null)}
-          orderId={updateStatusOrder.id}
-          currentStatus={updateStatusOrder.status}
-          onSuccess={fetchOrders}
-        />
-      )}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        order={selectedOrder}
+        onStatusUpdate={fetchOrders}
+      />
     </div>
   );
 }
